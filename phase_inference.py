@@ -27,7 +27,7 @@ class cluster:
 		""" more efficient, delete if redundant"""
 		self.member_markers = cluster_dataframe[ cluster_dataframe['cluster'] == self.name ]
 		self.marker_list = list(self.member_markers['marker']) #not used yet
-	def phase_dat(self, phase_dataframe)
+	def phase_dat(self, phase_dataframe):
 		"""grab the phase data for the markers in the cluster"""
 		self.phase = phase_dataframe[ phase_dataframe['marker'].isin(self.member_markers['marker'])]
 		self.phase = self.phase.replace('-', np.nan)
