@@ -17,6 +17,7 @@ class cluster:
 	"""within these clusters, the initial imputation will take place"""
 	"""a consensus phase vector for the cluster will be output, and """
 	"""it may still include missing genotypes, where no data present"""
+	"""or where the two phases are present in equal numbers (tie) """
 	def __init__(self, cluster_name):
 		""" initiate, set name of cluster """
 		self.name = cluster_name
@@ -66,11 +67,9 @@ df_null = df.isnull().unstack()
 t = df_null[df_null]
 s = pd.Series(t.index.get_level_values(1), t.index.get_level_values(0))
 
-
-
 	def first_fill(self):
 		""" this imputes a phase for NaN values that have matches up and down stream"""
-
+		""" when this is done, remove these from the missing data series """
 
 	def count_matches(self):
 		""" scan through the phase changes dataframe, counting matches with """
