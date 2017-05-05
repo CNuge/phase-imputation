@@ -40,17 +40,16 @@ class cluster:
 		consensus_count.idxmax()
 		
 		#above returns the maximal value, for ties it doesn't find them
-		#can compare to the other values in index if their index == 'H', 'A' or 'V' 
-		# if they're equal , then change the value to NaN
-		consensus_count.index
-
+		#solution!!!!!:
+			#if number of times the max value appears in column >1 set it to NaN!
+			#don't need to know what it is, just if its the same
+		#count the times the maximum value appears.
+		max_values = consensus_count.max()
+		consensus_count #use the value_counts code to count times equal to this, if > 1
+		#then set consensus_count == 0
 		
-
-
-		#if less than 2 count for each, it returns an NaN, need a better way, this becomes cumbersome
-
 		#here exception handling is needed
-			#1. what if no values? --> make it an NaN
+			#handeled! #1. what if no values? --> make it an NaN 
 			#2. if a tie... make it an NaN? then the next steps can impute it through comparison
 
 ##test code##
