@@ -6,7 +6,7 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--phase", type=str, help="phase file for the linkage group, created using genovect-batch, see README.txt for format notes")
+parser.add_argument("-p", "--phase", type=str, help="phase file for the linkage group, created using genovect-batch(or another phasing program), see README.txt for format notes")
 parser.add_argument("-c", "--clusters", type=str, help="cluster-tab-marker list for all markers in the dataset, note clusters must be listed in the proper order!")
 parser.add_argument("-n", "--num_progeny", type=int, help="number of progeny in the family")
 args = parser.parse_args()
@@ -16,7 +16,7 @@ class cluster:
 	"""this class represents a cluster location in the marker order """
 	"""within these clusters, the initial imputation will take place"""
 	"""a consensus phase vector for the cluster will be output, and """
-	"""it may still include missing genotypes, where no data present"""
+	"""it may still include missing genotypes, where no data is present"""
 	"""or where the two phases are present in equal numbers (tie) """
 	def __init__(self, cluster_name):
 		""" initiate, set name of cluster """
@@ -57,19 +57,18 @@ class linkage_group:
 	def missing_data(self):
 		""" build a series, listing all the df locations with nan values"""
 		""" this can target further computations to the needed locations """
+		""" stores the list as self.missing"""
+		missing_data_search = self.phase_data.isnull().unstack()
+		missing_data_true = missing_data_search[missing_data_search]
+		self.missing = pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
 
-#use the following to 1. find the nulls and unstack them
-# then make a series with rows as the numbers and columns as the index
-NaN = np.nan
-d=[[11.4,1.3,2.0, NaN],[11.4,1.3,NaN, NaN],[11.4,1.3,2.8, 0.7],[NaN,NaN,2.8, 0.7]]
-df = pd.DataFrame(data=d, columns=['A','B','C','D'])
-df_null = df.isnull().unstack()
-t = df_null[df_null]
-s = pd.Series(t.index.get_level_values(1), t.index.get_level_values(0))
-
-	def first_fill(self):
+	def fill_adjacent_same(self):
 		""" this imputes a phase for NaN values that have matches up and down stream"""
 		""" when this is done, remove these from the missing data series """
+		for marker in self.missing:
+			#index is col, if one above == one below index of marker, impute
+			#then remove from the self.missing series
+			#else contine
 
 	def count_matches(self):
 		""" scan through the phase changes dataframe, counting matches with """
@@ -83,19 +82,23 @@ if __name__ == '__main__':
 	df_header.extend(progeny_head)
 	
 	"""read in the phase data """
-	phase_dat = pd.read_csv(args.phase, names=df_header)
+	phase_dataframe = pd.read_csv(args.phase, names=df_header)
 
 	"""read in the cluster designations """
-	cluster_dat = pd.read_csv(args.clusters)
+	cluster_dataframe = pd.read_csv(args.clusters)
 
-	order = cluster_dat['cluster'].drop_duplicates()
+	order = cluster_dataframe['cluster'].drop_duplicates()
 
-	""" for each of the clusters in the order, initiate a cluster class instance """
-	""" run the .members() .phase_dat() .consensus_phase() for each class """
-	""" call the .consensus_phase for each cluster, and add it to a new consensus df """
+	cluster_consensus_phase_df = DataFrame(data=None, columns=df_header)
+	for pos in order:
+		cluster_dat = cluster(pos)
+		cluster_dat.members(cluster_dataframe)
+		cluster_dat.phase_dat(phase_dataframe)
+		cluster_dat.consensus_phase()
+		cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
-
-
+	#take the cluster consensus_phase_df and manipulate it with the LG class
+	#in order to impute the missing values
 
 
 
@@ -109,6 +112,19 @@ df_header.extend(progeny_head)
 phase_dataframe = pd.read_csv('example_phase_hq.f', names=df_header)
 cluster_dataframe = pd.read_table('cluster_members.txt')
 order = cluster_dataframe['cluster'].drop_duplicates()
+
+cluster_consensus_phase_df = DataFrame(data=None, columns=df_header)
+for pos in order:
+	cluster_dat = cluster(pos)
+	cluster_dat.members(cluster_dataframe)
+	cluster_dat.phase_dat(phase_dataframe)
+	cluster_dat.consensus_phase()
+	cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
+
+missing_data_search = cluster_consensus_phase_df.isnull().unstack()
+missing_data_true = missing_data_search[missing_data_search]
+missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
+
 
 ##test code##
 #for consensus
