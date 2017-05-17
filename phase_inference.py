@@ -133,9 +133,8 @@ class linkage_group:
 	def write_phase(self, output_name):
 		""" write imputed phase file to output"""
 		print('writing phase data to file %s' % (output_name))
-		file = open(output_name, 'w')
-		file.write(self.phase_data)
-		file.close()
+		self.phase_data.to_csv(output_name, header=False, index=False, na_rep = '-')
+
 
 if __name__ == '__main__':
 	"""turn the number of progeny into a list of names"""
@@ -160,15 +159,17 @@ if __name__ == '__main__':
 		cluster_dat.consensus_phase()
 		cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
-	#initial the linkage group class instance
+	#initiate the linkage group class instance
 	LG_phase_data = linkage_group(order, cluster_consensus_phase_df)
 	#look for missing data
 	LG_phase_data.missing_data()
-	#optimistic, but if none then skip the final steps and straight to print
+	#optimistic, but if no missing data then skip the impute step and go straight to print
 	if len(LG_phase_data.missing) == 0:
 		LG_phase_data.write_phase(output_name)
+	#or impute the missing data and then print the output
 	else:
 		LG_phase_data.impute_missing()
+		output_name = 'test.txt'
 		LG_phase_data.write_phase(output_name)
 
 
