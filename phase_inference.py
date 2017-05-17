@@ -76,17 +76,17 @@ class linkage_group:
 			self.phase_data[col_index][row_index] = below		
 		else:
 			above = self.phase_data[col_index][row_index-1]
-			if below == np.nan:
-				below = self.phase_data[col_index][row_index-2]			
+			if above == np.nan:
+				above = self.phase_data[col_index][row_index-2]			
 			self.phase_data[col_index][row_index] = above
 			
 
-	def count_matches(self, position):
+	def count_matches(self, position, row_index):
 		""" count matches with the cluster above and the cluster below for each missing spot"""
 		""" return direction with more matches"""
-		position_phase = self.phase_data.iloc[self.missing[position]]
-		above_phase = self.phase_data.iloc[self.missing[position] -1]
-		below_phase = self.phase_data.iloc[self.missing[position] +1]
+		position_phase = self.phase_data.iloc[row_index]
+		above_phase = self.phase_data.iloc[row_index -1]
+		below_phase = self.phase_data.iloc[row_index +1]
 
 		above_matches = 0
 		below_matches = 0
@@ -109,22 +109,24 @@ class linkage_group:
 	def impute_missing(self):
 		""" this imputes a phase for NaN values that have matches up and down stream"""
 		""" when this is done, remove these from the missing data series """
-		for location in range(0,len(self.missing)):
+		for location in range(0,(len(self.missing))):
+			print('running')
+			print(location)
 			col_index = self.missing.index[location]
-			row_index = self.missing[location]
+			row_index = self.missing.iloc[location]
 			if (row_index == 0) or (row_index == (len(self.phase_data)-1)):
 				"""pull out missing data on the edges, and pass to other function"""
 				self.fill_ends_of_df(col_index, row_index)
 				continue
 			else:
-
 				above = self.phase_data[col_index][row_index-1]
 				below = self.phase_data[col_index][row_index+1]
 				if above == below:
+					print('made it here 1')
 					self.phase_data[col_index][row_index] = above
 					continue
 				else:
-					closer_match = count_matches(location)
+					closer_match = self.count_matches(location, row_index)
 					if closer_match == 'above':
 						self.phase_data[col_index][row_index] = above
 					elif closer_match == 'below':
@@ -211,7 +213,7 @@ cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 # 	- two in a row in the middle
 #	- two in a row on the end
 
-
+cluster_consensus_phase_df.to_csv('compare.txt')
 
 
 ###########
