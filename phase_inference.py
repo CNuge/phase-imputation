@@ -1,8 +1,6 @@
 
 #TO DO: - recursive call in fill_ends_of_df to handle large missing data amounts
 #		- test the linkage_group functionality 
-#		- add a write to file sted
-
 
 import pandas as pd
 from pandas import Series, DataFrame
