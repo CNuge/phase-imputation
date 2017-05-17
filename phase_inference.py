@@ -62,14 +62,30 @@ class linkage_group:
 		missing_data_true = missing_data_search[missing_data_search]
 		self.missing = pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
 
+	def fill_end_of_df(self, end_index):
+
 	def fill_adjacent_same(self):
 		""" this imputes a phase for NaN values that have matches up and down stream"""
 		""" when this is done, remove these from the missing data series """
-		for marker in self.missing:
+#####
+#this chunk needs testing
+#####
+		for location in range(0,len(self.missing)):
+			if (self.missing[location] == 0) or (self.missing[location] == (len(self.phase_data)-1)):
+				self.fill_end_of_df(self.missing[location])
+				continue
+			else:
+				above = self.phase_data[self.missing.index[marker]][self.missing[marker]-1]
+				below = self.phase_data[self.missing.index[marker]][self.missing[marker]+1]
+				if above == below:
+					self.phase_data[self.missing.index[marker],self.missing[marker]] = above
+
+			# col = self.missing.index[marker]
+			# row = self.missing[marker]
 			#index is col, if one above == one below index of marker, impute
 			#then remove from the self.missing series
 			#else contine
-
+cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 	def count_matches(self):
 		""" scan through the phase changes dataframe, counting matches with """
 		""" the cluster above and the cluster below for each cluster"""
@@ -121,9 +137,28 @@ for pos in order:
 	cluster_dat.consensus_phase()
 	cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
+
+#this is self.missing
 missing_data_search = cluster_consensus_phase_df.isnull().unstack()
 missing_data_true = missing_data_search[missing_data_search]
 missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
+
+cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
+
+
+
+#the cluster_consensus_phase_df above contains the data for the
+#consensus phases.
+
+#I've added in many different kind of missing phases, including:
+#	- on the end
+# 	- two in a row in the middle
+#	- two in a row on the end
+
+
+
+
+
 
 
 ##test code##
@@ -139,7 +174,7 @@ consensus_count = consensus.apply(pd.value_counts)
 consensus_phase = consensus_count.idxmax()
 column = 'P_2'
 
-or column in list(consensus_count.columns):
+for column in list(consensus_count.columns):
 	counts = consensus_count[column]
 	num_max = counts[counts == counts.max()]
 	if len(num_max) > 1:
