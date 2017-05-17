@@ -129,12 +129,18 @@ class linkage_group:
 					closer_match = count_matches(location)
 					if closer_match == 'above':
 						self.phase_data[col_index][row_index] = above
-					else closer_match == 'below':
+					elif closer_match == 'below':
 						self.phase_data[col_index][row_index] = below
 
+	def write_phase(self, output_name):
+		""" write imputed phase file to output"""
+		print('writing phase data to file %s' % (output_name))
+		file = open(output_name, 'w')
+		file.write(self.phase_data)
+		file.close()
 
 if __name__ == '__main__':
-	""" turn the number of progeny into a list of names"""
+	"""turn the number of progeny into a list of names"""
 	progeny_head = ['P_%s' % ( d+1) for d in range(0,args.num_progeny)]
 	df_header = ['marker']
 	df_header.extend(progeny_head)
@@ -142,6 +148,7 @@ if __name__ == '__main__':
 	"""read in the phase data """
 	phase_dataframe = pd.read_csv(args.phase, names=df_header)
 
+	output_name = 'IMPUTED_' + args.phase
 	"""read in the cluster designations """
 	cluster_dataframe = pd.read_csv(args.clusters)
 
@@ -155,12 +162,16 @@ if __name__ == '__main__':
 		cluster_dat.consensus_phase()
 		cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
-	# take the cluster consensus_phase_df and manipulate it with the LG class,
-	# in order to impute the missing values
-
+	#initial the linkage group class instance
 	LG_phase_data = linkage_group(order, cluster_consensus_phase_df)
-
-
+	#look for missing data
+	LG_phase_data.missing_data()
+	#optimistic, but if none then skip the final steps and straight to print
+	if len(LG_phase_data.missing) == 0:
+		LG_phase_data.write_phase(output_name)
+	else:
+		LG_phase_data.impute_missing()
+		LG_phase_data.write_phase(output_name)
 
 
 ###################################################
