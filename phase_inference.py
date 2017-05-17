@@ -1,4 +1,9 @@
 
+#TO DO: - recursive call in fill_ends_of_df to handle large missing data amounts
+#		- test the linkage_group functionality 
+#		- add a write to file sted
+
+
 import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
@@ -62,8 +67,21 @@ class linkage_group:
 		missing_data_true = missing_data_search[missing_data_search]
 		self.missing = pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
 
-	def fill_end_of_df(self, col_index, row_index):
+	def fill_ends_of_df(self, col_index, row_index):
 		""" fill the first or last clusters in the dataframe with the only flank's value """
+		if row_index == 0:
+			""" filling top line"""
+			below = self.phase_data[col_index][row_index+1]
+			""" one layer of double check, if more missing gts, will need a recursive search here"""
+			if below == np.nan:
+				below = self.phase_data[col_index][row_index+2]
+			self.phase_data[col_index][row_index] = below		
+		else:
+			above = self.phase_data[col_index][row_index-1]
+			if below == np.nan:
+				below = self.phase_data[col_index][row_index-2]			
+			self.phase_data[col_index][row_index] = above
+			
 
 	def count_matches(self, position):
 		""" count matches with the cluster above and the cluster below for each missing spot"""
@@ -98,7 +116,7 @@ class linkage_group:
 			row_index = self.missing[location]
 			if (row_index == 0) or (row_index == (len(self.phase_data)-1)):
 				"""pull out missing data on the edges, and pass to other function"""
-				self.fill_end_of_df(col_index, row_index)
+				self.fill_ends_of_df(col_index, row_index)
 				continue
 			else:
 
@@ -114,43 +132,6 @@ class linkage_group:
 					else closer_match == 'below':
 						self.phase_data[col_index][row_index] = below
 
-
-
-###########
-#this is self.missing
-missing_data_search = cluster_consensus_phase_df.isnull().unstack()
-missing_data_true = missing_data_search[missing_data_search]
-missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
-
-col_index = missing_series.index[location]
-
-for location in range(0,len(missing_series)):
-	print(missing_series[location])
-	if (missing_series[location] == 0) or (missing_series[location] == (len(cluster_consensus_phase_df)-1)):
-		self.fill_end_of_df(missing_series[location])
-		continue
-	else:
-		above = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]-1]
-		below = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]+1]
-		if above == below:
-			cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]] = above
-
-
-cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
-	
-position_phase = cluster_consensus_phase_df.iloc[missing_series[position]]
-above_phase = cluster_consensus_phase_df.iloc[missing_series[position] -1]
-below_phase = cluster_consensus_phase_df.iloc[missing_series[position] +1]
-
-above_matches = 0
-below_matches = 0
-for idx, phase in enumerate(position_phase):
-	if above_phase[idx] == position_phase:
-		above_matches +=1
-	if below_phase[idx] == position_phase:
-		below_matches +=1
-
-##############
 
 if __name__ == '__main__':
 	""" turn the number of progeny into a list of names"""
@@ -221,6 +202,43 @@ cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 #	- two in a row on the end
 
 
+
+
+###########
+#this is self.missing
+missing_data_search = cluster_consensus_phase_df.isnull().unstack()
+missing_data_true = missing_data_search[missing_data_search]
+missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
+
+col_index = missing_series.index[location]
+
+for location in range(0,len(missing_series)):
+	print(missing_series[location])
+	if (missing_series[location] == 0) or (missing_series[location] == (len(cluster_consensus_phase_df)-1)):
+		self.fill_end_of_df(missing_series[location])
+		continue
+	else:
+		above = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]-1]
+		below = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]+1]
+		if above == below:
+			cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]] = above
+
+
+cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
+	
+position_phase = cluster_consensus_phase_df.iloc[missing_series[position]]
+above_phase = cluster_consensus_phase_df.iloc[missing_series[position] -1]
+below_phase = cluster_consensus_phase_df.iloc[missing_series[position] +1]
+
+above_matches = 0
+below_matches = 0
+for idx, phase in enumerate(position_phase):
+	if above_phase[idx] == position_phase:
+		above_matches +=1
+	if below_phase[idx] == position_phase:
+		below_matches +=1
+
+##############
 
 
 
