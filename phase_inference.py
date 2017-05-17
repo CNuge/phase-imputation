@@ -110,8 +110,6 @@ class linkage_group:
 		""" this imputes a phase for NaN values that have matches up and down stream"""
 		""" when this is done, remove these from the missing data series """
 		for location in range(0,(len(self.missing))):
-			print('running')
-			print(location)
 			col_index = self.missing.index[location]
 			row_index = self.missing.iloc[location]
 			if (row_index == 0) or (row_index == (len(self.phase_data)-1)):
@@ -122,7 +120,6 @@ class linkage_group:
 				above = self.phase_data[col_index][row_index-1]
 				below = self.phase_data[col_index][row_index+1]
 				if above == below:
-					print('made it here 1')
 					self.phase_data[col_index][row_index] = above
 					continue
 				else:
