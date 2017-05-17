@@ -3,7 +3,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 import numpy as np
 import argparse
-
+import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--phase", type=str, help="phase file for the linkage group, created using genovect-batch(or another phasing program), see README.txt for format notes")
@@ -48,48 +48,109 @@ class cluster:
 
 
 class linkage_group:
-	""" a class to represent the linkage group, and fill in missing values"""
+	""" a class to represent the linkage group, and impute missing values"""
 	def __init__(self, order, data):
 		""" read in the order and a dataframe of the consensus phase data"""
 		self.order = order
 		self.phase_data = data
-	
+
 	def missing_data(self):
 		""" build a series, listing all the df locations with nan values"""
-		""" this can target further computations to the needed locations """
+		""" this targets further computations to the needed locations"""
 		""" stores the list as self.missing"""
 		missing_data_search = self.phase_data.isnull().unstack()
 		missing_data_true = missing_data_search[missing_data_search]
 		self.missing = pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
 
-	def fill_end_of_df(self, end_index):
+	def fill_end_of_df(self, col_index, row_index):
+		""" fill the first or last clusters in the dataframe with the only flank's value """
 
-	def fill_adjacent_same(self):
+	def count_matches(self, position):
+		""" count matches with the cluster above and the cluster below for each missing spot"""
+		""" return direction with more matches"""
+		position_phase = self.phase_data.iloc[self.missing[position]]
+		above_phase = self.phase_data.iloc[self.missing[position] -1]
+		below_phase = self.phase_data.iloc[self.missing[position] +1]
+
+		above_matches = 0
+		below_matches = 0
+		for idx, phase in enumerate(position_phase):
+			if above_phase[idx] == phase:
+				above_matches +=1
+			if below_phase[idx] == phase:
+				below_matches +=1
+		if above_matches > below_matches:
+			return 'above'
+		elif above_matches < below_matches:
+			return 'below'
+		else:
+			""" if above and below matches are equal, return one of the two randomly """
+			""" print a flag to alter the user of this behaviour """
+			print('%s filled at random, equal above and below matches for position %s\n' % (position_phase.marker , position))
+			rand_choices = ['above', 'below']
+			return random.choice(rand_choices)
+
+	def impute_missing(self):
 		""" this imputes a phase for NaN values that have matches up and down stream"""
 		""" when this is done, remove these from the missing data series """
-#####
-#this chunk needs testing
-#####
 		for location in range(0,len(self.missing)):
-			if (self.missing[location] == 0) or (self.missing[location] == (len(self.phase_data)-1)):
-				self.fill_end_of_df(self.missing[location])
+			col_index = self.missing.index[location]
+			row_index = self.missing[location]
+			if (row_index == 0) or (row_index == (len(self.phase_data)-1)):
+				"""pull out missing data on the edges, and pass to other function"""
+				self.fill_end_of_df(col_index, row_index)
 				continue
 			else:
-				above = self.phase_data[self.missing.index[marker]][self.missing[marker]-1]
-				below = self.phase_data[self.missing.index[marker]][self.missing[marker]+1]
-				if above == below:
-					self.phase_data[self.missing.index[marker],self.missing[marker]] = above
 
-			# col = self.missing.index[marker]
-			# row = self.missing[marker]
-			#index is col, if one above == one below index of marker, impute
-			#then remove from the self.missing series
-			#else contine
+				above = self.phase_data[col_index][row_index-1]
+				below = self.phase_data[col_index][row_index+1]
+				if above == below:
+					self.phase_data[col_index][row_index] = above
+					continue
+				else:
+					closer_match = count_matches(location)
+					if closer_match == 'above':
+						self.phase_data[col_index][row_index] = above
+					else closer_match == 'below':
+						self.phase_data[col_index][row_index] = below
+
+
+
+###########
+#this is self.missing
+missing_data_search = cluster_consensus_phase_df.isnull().unstack()
+missing_data_true = missing_data_search[missing_data_search]
+missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
+
+col_index = missing_series.index[location]
+
+for location in range(0,len(missing_series)):
+	print(missing_series[location])
+	if (missing_series[location] == 0) or (missing_series[location] == (len(cluster_consensus_phase_df)-1)):
+		self.fill_end_of_df(missing_series[location])
+		continue
+	else:
+		above = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]-1]
+		below = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]+1]
+		if above == below:
+			cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]] = above
+
+
 cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
-	def count_matches(self):
-		""" scan through the phase changes dataframe, counting matches with """
-		""" the cluster above and the cluster below for each cluster"""
-		""" store this in a list of tuples to be accessed by the filling"""
+	
+position_phase = cluster_consensus_phase_df.iloc[missing_series[position]]
+above_phase = cluster_consensus_phase_df.iloc[missing_series[position] -1]
+below_phase = cluster_consensus_phase_df.iloc[missing_series[position] +1]
+
+above_matches = 0
+below_matches = 0
+for idx, phase in enumerate(position_phase):
+	if above_phase[idx] == position_phase:
+		above_matches +=1
+	if below_phase[idx] == position_phase:
+		below_matches +=1
+
+##############
 
 if __name__ == '__main__':
 	""" turn the number of progeny into a list of names"""
@@ -113,10 +174,19 @@ if __name__ == '__main__':
 		cluster_dat.consensus_phase()
 		cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
-	#take the cluster consensus_phase_df and manipulate it with the LG class
-	#in order to impute the missing values
+	# take the cluster consensus_phase_df and manipulate it with the LG class,
+	# in order to impute the missing values
+
+	LG_phase_data = linkage_group(order, cluster_consensus_phase_df)
 
 
+
+
+###################################################
+###################################################
+###################################################
+###################################################
+###################################################
 
 ######## for development
 num_progeny = 85
@@ -138,11 +208,6 @@ for pos in order:
 	cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
 
 
-#this is self.missing
-missing_data_search = cluster_consensus_phase_df.isnull().unstack()
-missing_data_true = missing_data_search[missing_data_search]
-missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
-
 cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 
 
@@ -150,7 +215,7 @@ cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 #the cluster_consensus_phase_df above contains the data for the
 #consensus phases.
 
-#I've added in many different kind of missing phases, including:
+#I've added in many different kinds of missing phases, including:
 #	- on the end
 # 	- two in a row in the middle
 #	- two in a row on the end
@@ -159,43 +224,5 @@ cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
 
 
 
-
-
-##test code##
-#for consensus
-name = 'X4'
-member_markers = cluster_dataframe[ cluster_dataframe['cluster'] == name ]
-phase = phase_dataframe[ phase_dataframe['marker'].isin(member_markers['marker'])]
-phase = phase.replace('-', np.nan)
-consensus = phase
-consensus['marker'] = [name for x in range(0,len(consensus['marker']))]
-consensus_count = consensus.apply(pd.value_counts)
-
-consensus_phase = consensus_count.idxmax()
-column = 'P_2'
-
-for column in list(consensus_count.columns):
-	counts = consensus_count[column]
-	num_max = counts[counts == counts.max()]
-	if len(num_max) > 1:
-		consensus_phase.ix[column] = np.nan
-
-
-
-
-#idea: if the inverse
-
-
-df[df['A'] == df['A'].max()]
-
-#The warning offers a suggestion to rewrite as follows:
-
-#df.loc[df['A'] > 2, 'B'] = new_val
-
-
-#Empty if nothing has 2+ occurrences.
-consensus = phase.mode()
-phase.value_counts()
-phase.apply(pd.value_counts)
 
 	
