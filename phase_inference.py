@@ -1,5 +1,7 @@
 
 #TO DO: - recursive call in fill_ends_of_df to handle large missing data amounts
+#		- search for use of np.isnan -  this is where the problems are happening, find a fix!
+#		- recursive call in impute missing, ~line 129 (to handle really sparse data)
 #		- test the linkage_group functionality 
 
 import pandas as pd
@@ -71,17 +73,17 @@ class linkage_group:
 			""" filling top line"""
 			below = self.phase_data[col_index][row_index+1]
 			""" one layer of double check, if more missing gts, will need a recursive search here"""
-			if below == np.nan:
+			if np.isnan(below)  == True:
 				below = self.phase_data[col_index][row_index+2]
 			self.phase_data[col_index][row_index] = below		
 		else:
 			above = self.phase_data[col_index][row_index-1]
-			if above == np.nan:
+			if np.isnan(above)  == True:
 				above = self.phase_data[col_index][row_index-2]			
 			self.phase_data[col_index][row_index] = above
 			
 
-	def count_matches(self, position, row_index):
+	def count_matches(self, position, row_index, col_index):
 		""" count matches with the cluster above and the cluster below for each missing spot"""
 		""" return direction with more matches"""
 		position_phase = self.phase_data.iloc[row_index]
@@ -102,7 +104,7 @@ class linkage_group:
 		else:
 			""" if above and below matches are equal, return one of the two randomly """
 			""" print a flag to alter the user of this behaviour """
-			print('%s filled at random, equal above and below matches for position %s\n' % (position_phase.marker , position))
+			print('%s filled at random, equal above and below matches for position %s\n' % (position_phase.marker , col_index))
 			rand_choices = ['above', 'below']
 			return random.choice(rand_choices)
 
@@ -123,11 +125,21 @@ class linkage_group:
 					self.phase_data[col_index][row_index] = above
 					continue
 				else:
-					closer_match = self.count_matches(location, row_index)
+					closer_match = self.count_matches(location, row_index, col_index)
+					#need a recursive function call here as well!
 					if closer_match == 'above':
-						self.phase_data[col_index][row_index] = above
+						
+						if np.isnan(above) == True:
+							self.phase_data[col_index][row_index] = above
+						else:
+							two_above = self.phase_data[col_index][row_index-2]
+							self.phase_data[col_index][row_index] = two_above
 					elif closer_match == 'below':
-						self.phase_data[col_index][row_index] = below
+						if np.isnan(below) == True:
+							self.phase_data[col_index][row_index] = below
+						else:
+							two_below = self.phase_data[col_index][row_index+2]
+							self.phase_data[col_index][row_index] = two_below
 
 	def write_phase(self, output_name):
 		""" write imputed phase file to output"""
