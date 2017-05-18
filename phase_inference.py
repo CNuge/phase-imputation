@@ -1,8 +1,7 @@
 
-#TO DO: - recursive call in fill_ends_of_df to handle large missing data amounts
-#		- search for use of np.isnan -  this is where the problems are happening, find a fix!
-#		- recursive call in impute missing, ~line 129 (to handle really sparse data)
-#		- test the linkage_group functionality 
+""" please consult the README documentation for notes on the implementation
+	of this program. Input style is as follows:
+	python3 phase_inference.py -p phase.f -c cluster_file.txt -n 85 """
 
 import pandas as pd
 from pandas import Series, DataFrame
@@ -73,12 +72,12 @@ class linkage_group:
 			""" filling top line"""
 			below = self.phase_data[col_index][row_index+1]
 			""" one layer of double check, if more missing gts, will need a recursive search here"""
-			if np.isnan(below)  == True:
+			if type(below) == float:
 				below = self.phase_data[col_index][row_index+2]
 			self.phase_data[col_index][row_index] = below		
 		else:
 			above = self.phase_data[col_index][row_index-1]
-			if np.isnan(above)  == True:
+			if type(above) == float:
 				above = self.phase_data[col_index][row_index-2]			
 			self.phase_data[col_index][row_index] = above
 			
@@ -104,7 +103,7 @@ class linkage_group:
 		else:
 			""" if above and below matches are equal, return one of the two randomly """
 			""" print a flag to alter the user of this behaviour """
-			print('%s filled at random, equal above and below matches for position %s\n' % (position_phase.marker , col_index))
+			print('%s, colmumn %s filled at random, equal above and below matches for this position' % (position_phase.marker , col_index))
 			rand_choices = ['above', 'below']
 			return random.choice(rand_choices)
 
@@ -128,19 +127,18 @@ class linkage_group:
 					closer_match = self.count_matches(location, row_index, col_index)
 					#need a recursive function call here as well!
 					if closer_match == 'above':
-						
-						if np.isnan(above) == True:
+						if type(above) != float:
 							self.phase_data[col_index][row_index] = above
 						else:
 							two_above = self.phase_data[col_index][row_index-2]
 							self.phase_data[col_index][row_index] = two_above
 					elif closer_match == 'below':
-						if np.isnan(below) == True:
+						if type(below) != float:
 							self.phase_data[col_index][row_index] = below
 						else:
 							two_below = self.phase_data[col_index][row_index+2]
 							self.phase_data[col_index][row_index] = two_below
-
+	
 	def write_phase(self, output_name):
 		""" write imputed phase file to output"""
 		print('writing phase data to file %s' % (output_name))
@@ -182,86 +180,6 @@ if __name__ == '__main__':
 		LG_phase_data.impute_missing()
 		output_name = 'test.txt'
 		LG_phase_data.write_phase(output_name)
-
-
-###################################################
-###################################################
-###################################################
-###################################################
-###################################################
-
-######## for development
-num_progeny = 85
-progeny_head = ['P_%s' % ( d+1) for d in range(0,num_progeny)]
-
-df_header = ['marker']
-df_header.extend(progeny_head)
-
-phase_dataframe = pd.read_csv('example_phase_hq.f', names=df_header)
-cluster_dataframe = pd.read_table('cluster_members.txt')
-order = cluster_dataframe['cluster'].drop_duplicates()
-
-cluster_consensus_phase_df = DataFrame(data=None, columns=df_header)
-for pos in order:
-	cluster_dat = cluster(pos)
-	cluster_dat.members(cluster_dataframe)
-	cluster_dat.phase_dat(phase_dataframe)
-	cluster_dat.consensus_phase()
-	cluster_consensus_phase_df = cluster_consensus_phase_df.append(cluster_dat.consensus_phase, ignore_index=True)
-
-
-cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
-
-
-
-#the cluster_consensus_phase_df above contains the data for the
-#consensus phases.
-
-#I've added in many different kinds of missing phases, including:
-#	- on the end
-# 	- two in a row in the middle
-#	- two in a row on the end
-
-cluster_consensus_phase_df.to_csv('compare.txt')
-
-
-###########
-#this is self.missing
-missing_data_search = cluster_consensus_phase_df.isnull().unstack()
-missing_data_true = missing_data_search[missing_data_search]
-missing_series= pd.Series(missing_data_true.index.get_level_values(1), missing_data_true.index.get_level_values(0))
-
-col_index = missing_series.index[location]
-
-for location in range(0,len(missing_series)):
-	print(missing_series[location])
-	if (missing_series[location] == 0) or (missing_series[location] == (len(cluster_consensus_phase_df)-1)):
-		self.fill_end_of_df(missing_series[location])
-		continue
-	else:
-		above = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]-1]
-		below = cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]+1]
-		if above == below:
-			cluster_consensus_phase_df[missing_series.index[location]][missing_series[location]] = above
-
-
-cluster_consensus_phase_df[missing_series.index[0]][missing_series[0]]
-	
-position_phase = cluster_consensus_phase_df.iloc[missing_series[position]]
-above_phase = cluster_consensus_phase_df.iloc[missing_series[position] -1]
-below_phase = cluster_consensus_phase_df.iloc[missing_series[position] +1]
-
-above_matches = 0
-below_matches = 0
-for idx, phase in enumerate(position_phase):
-	if above_phase[idx] == position_phase:
-		above_matches +=1
-	if below_phase[idx] == position_phase:
-		below_matches +=1
-
-##############
-
-
 
 
 	
