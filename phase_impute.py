@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
 	output_name = 'IMPUTED_' + args.phase
 	"""read in the cluster designations """
-	cluster_dataframe = pd.read_csv(args.clusters)
+	cluster_dataframe = pd.read_csv(args.clusters, sep='\t')
 
 	order = cluster_dataframe['cluster'].drop_duplicates()
 
