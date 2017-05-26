@@ -49,3 +49,13 @@ certain fringe cases, such as when:
 Still need:
 5. The flanking phases are NaN for 2+ rows... need to code this up as a recursive function to continue until
 	a value with data is found.
+
+
+Misc. notes:
+example_data folder has data in the format needed to run phase imputation
+support_functions folder contains scripts to help you move a linkage map
+into the format necessary to run phase imputation and shell scripts to execute 
+phase imputation for numerous linkage groups at once
+
+
+
