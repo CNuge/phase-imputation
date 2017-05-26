@@ -178,7 +178,7 @@ if __name__ == '__main__':
 	#or impute the missing data and then print the output
 	else:
 		LG_phase_data.impute_missing()
-		output_name = 'test.txt'
+		output_name = 'imputed_' + args.phase
 		LG_phase_data.write_phase(output_name)
 
 
