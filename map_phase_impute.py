@@ -17,20 +17,17 @@ args = parser.parse_args()
 
 
 class cluster: 
-	"""this class represents a cluster location in the marker order """
-	"""within these clusters, the initial imputation will take place"""
-	"""a consensus phase vector for the cluster will be output, and """
-	"""it may still include missing genotypes, where no data is present"""
-	"""or where the two phases are present in equal numbers (tie) """
+	""" this class represents a cluster location in the marker order """
+	""" within these clusters, the initial imputation will take place"""
+	""" a consensus phase vector for the cluster will be output, and """
+	""" it may still include missing genotypes, where no data is present"""
+	""" or where the two phases are present in equal numbers (tie) """
 	def __init__(self, cluster_name):
 		""" initiate, set name of cluster """
 		self.name = cluster_name
 	def members(self, cluster_dataframe):
 		""" grab a list of the member markers from the cluster df"""
-		""" I'm coding storage 2 ways here, not sure which will be"""
-		""" more efficient, delete if redundant"""
 		self.member_markers = cluster_dataframe[ cluster_dataframe['cluster'] == self.name ]
-		self.marker_list = list(self.member_markers['marker']) #not used yet
 	def phase_dat(self, phase_dataframe):
 		"""grab the phase data for the markers in the cluster"""
 		self.phase = phase_dataframe[ phase_dataframe['marker'].isin(self.member_markers['marker'])]
