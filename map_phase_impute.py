@@ -152,6 +152,7 @@ if __name__ == '__main__':
 	phase_dataframe = pd.read_csv(args.phase, names=df_header)
 
 	output_name = 'IMPUTED_' + args.phase
+	
 	"""read in the cluster designations """
 	cluster_dataframe = pd.read_csv(args.clusters, sep='\t')
 

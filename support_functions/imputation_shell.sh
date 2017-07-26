@@ -1,7 +1,7 @@
 #!/bin/sh
  
 #note this shell is dependent on data structure in directories
-#you can change it to accomidate the way you have things in folders,
+# you can change it to accomidate the way you have things in folders,
 # or you can adjust your data to the following:
 # parent directory: containing the phase_impute.py file
 # a 'cluster_assignments' directory, housing the cluster files split by linkage group
@@ -10,9 +10,10 @@
 # note if you pass a filename in to '-p file.txt' flag it will write an
 # output of 'imputed_file.txt' to the same directory. 
 # if you pass in a folder+filename '-p/phase_data/file.txt' 
-#as done here, it will write a file with the same name to
+# as done here, it will write a file with the same name to
 # a different directory with imputed_ prefix i.e. 'imputed_phase_data/file.txt'
-#
+
+
 cd cluster_assignments
 linkage_groups=$(ls * | cut -d '_' -f 1)
 cd ..
