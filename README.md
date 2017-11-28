@@ -1,3 +1,5 @@
+# Phase imputation for missing data on a linkage map
+### preparing data for use in random forest
 
 The goal of this program is to leverage the new linkage mapping technique we are employing, 
 in order to create an input dataset of high quality for qtl analysis, and various
@@ -12,16 +14,19 @@ markers has missing genotypes and lacks a full phase vector necessary for modell
 markers all sit in the same cluster (cM location) on the linkage map, so their genotypes
 can be merged to create a full phase vector for the given ZRC. 
 
-ZRC_1
-Member markers:
+### ZRC_1
+### Member markers:
+
 	M1 H-HAHAAAAA-HAHH-
 	M2 HAHAH-AAAAHHAHHH
 	M3 HAHAHAAAAAHH-HHH
-Consensus phase:
-ZRC_1  HAHAHAAAAAHHAHHH
+
+### Consensus phase:
+
+	ZRC_1  HAHAHAAAAAHHAHHH
 
 
-The general idea of this algorithm is simple:
+## General idea of this algorithm
 1. make a consensus phase for each of the clusters in the map. If the cluster is ambigious
 	(i.e. all have missing data for a given column, or the two phases are equal in number)
 	an NaN is returned, and imputed in step two.
@@ -46,12 +51,10 @@ I've tried to make a thorough consideration of fringe cases, such as when:
 		(as at this point you may just be making things up).
 
 
-Misc. notes:
+## notes:
 example_data folder has data in the format needed to run phase imputation.
 
-support_functions folder contains scripts to help you move a linkage map
-into the format necessary to run phase imputation and shell scripts to execute 
-phase imputation for numerous linkage groups at once.
+support_functions folder contains scripts to help you move a linkage map into the format necessary to run phase imputation and shell scripts to execute phase imputation for numerous linkage groups at once.
 
 
 
